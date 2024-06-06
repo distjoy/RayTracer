@@ -58,14 +58,18 @@ void rightmultiply(const mat4 & M, stack<mat4> &transfstack)
 
 // Function to read the input data values
 // Use is optional, but should be very helpful in parsing.  
-bool readvals(stringstream &s, const int numvals, float* values) 
+bool readvals(stringstream &s, const int numvals, float* values, const string smd)
 {
     for (int i = 0; i < numvals; i++) {
         s >> values[i]; 
         if (s.fail()) {
-            cout << "Failed reading value " << i << " will skip\n"; 
+            cout << "Failed reading value "+smd << i << " will skip\n";
             return false;
+        }else{
+
+            cout << " reading value " << values[i] << " good\n";
         }
+
     }
     return true; 
 }
@@ -94,7 +98,7 @@ bool readLightValues(string cmd, stringstream& s){
         if (numlights == maxlights) { // No more Lights
             cerr << "Reached Maximum Number of Lights " << numlights << " Will ignore further lights\n";
         } else {
-            read = readvals(s, 6, values); // Position/color for lts.
+            read = readvals(s, 6, values,cmd); // Position/color for lts.
             if (read) {
                 lights[numlights].position = vec4(values[0], values[1], values[2], (cmd == "point") ? 1 : 0);
                 lights[numlights].color = vec4(values[3], values[4], values[5],0);
@@ -113,7 +117,7 @@ bool readLightColorProperties(string cmd, stringstream& s){
     GLfloat values[3];
     vec4 * prop;
     if (cmd == "shininess") {
-        read = readvals(s, 1, values);
+        read = readvals(s, 1, values,cmd);
         if (read) {
             shininess = values[0];
         }
@@ -128,7 +132,7 @@ bool readLightColorProperties(string cmd, stringstream& s){
     } else if (cmd == "emission") {
         prop = &emission;
     }
-    read = readvals(s, 3, values); // colors
+    read = readvals(s, 3, values,cmd); // colors
     if (read) {
         for (int i = 0; i < 3; i++) {
             (*prop)[i] = values[i];
@@ -141,7 +145,7 @@ bool readCameraValues(string cmd, stringstream& s){
     bool read = false;
     if (cmd == "camera") {
         GLfloat values[10];
-        if ((read = readvals(s,10,values))) {
+        if ((read = readvals(s,10,values,cmd))) {
 
             // YOUR CODE FOR HW 2 HERE
             // Use all values[0...9]
@@ -168,7 +172,7 @@ bool readSphereValues(string cmd, stringstream& s,stack <mat4>& ts){
     bool read;
     if (cmd == "sphere") {
         GLfloat values[4];
-        if ((read = readvals(s, 4, values))) {
+        if ((read = readvals(s, 4, values,cmd))) {
             Sphere* sphere = new Sphere();
             sphere->radius = values[3];
             sphere->center = vec3(values[0], values[1], values[2]);
@@ -189,7 +193,7 @@ bool readTriangleValues(string cmd, stringstream& s, stack <mat4>& ts){
     bool read = false;
     if (cmd == "tri" ) {
         GLfloat values[3];
-        if ((read = readvals(s, 3, values))) {
+        if ((read = readvals(s, 3, values,cmd))) {
             Triangle tri;
             tri.vertex1 = vertices[values[0]];
             tri.vertex2 = vertices[values[1]];
@@ -212,7 +216,7 @@ bool readTransforms(string cmd, stringstream& s, stack <mat4>& ts){
     bool read = false;
     GLfloat values[4];
     if (cmd == "rotate") {
-        if ((read = readvals(s,4,values))) {
+        if ((read = readvals(s,4,values,cmd))) {
             mat3 rm = Transform::rotate(values[3], vec3(values[0], values[1], values[2]));
             mat4  rm4(1.0);
             rm4[0] = vec4(rm[0],0);
@@ -223,13 +227,13 @@ bool readTransforms(string cmd, stringstream& s, stack <mat4>& ts){
         }
     }
     else if (cmd == "translate") {
-        if ((readvals(s,3,values))) {
+        if ((readvals(s,3,values,cmd))) {
             mat4 tm = Transform::translate((float)values[0], (float)values[1], (float)values[2]);
             rightmultiply(tm, ts);
         }
     }
     else if (cmd == "scale") {
-        if ((readvals(s,3,values))) {
+        if ((readvals(s,3,values,cmd))) {
             mat4 sm = Transform::scale(values[0], values[1], values[2]);
             rightmultiply(sm,ts);
 
@@ -282,7 +286,7 @@ void readfile(const char* filename)
                     continue;
 
                 if (cmd == "size") {
-                    validinput = readvals(s,2,values);
+                    validinput = readvals(s,2,values,cmd);
                     if (validinput) {
                         w =  values[0]; h = values[1]; 
                     }
@@ -294,7 +298,7 @@ void readfile(const char* filename)
                 if(readTriangleValues(cmd,s, transfstack))
                     continue;
                 if (cmd == "vertex") {
-                    validinput = readvals(s, 3, values);
+                    validinput = readvals(s, 3, values,cmd);
                    // Sphere sphere;
                     if (validinput) {
                        vertices.push_back(vec3(values[0], values[1], values[2]));
