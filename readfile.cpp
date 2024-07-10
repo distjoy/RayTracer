@@ -9,7 +9,7 @@
 // top of a stack.  These functions are given to aid in setting up the 
 // transformations properly, and to use glm functions in the right way.  
 // Their use is optional in your program.  
-  
+
 
 // The functions readvals and readfile do basic parsing.  You can of course 
 // rewrite the parser as you wish, but we think this basic form might be 
@@ -17,7 +17,7 @@
 
 // Please fill in parts that say YOUR CODE FOR HW 2 HERE. 
 // Read the other parts to get a context of what is going on. 
-  
+
 /*****************************************************************************/
 
 // Basic includes to get this file to work.  
@@ -30,9 +30,10 @@
 #include <GL/glew.h>
 //#include <GL/glut.h>
 #include <memory>
-#include "Transform.h" 
+#include "Transform.h"
 
 using namespace std;
+
 #include "variables.h"
 #include "readfile.h"
 #include "Sphere.h"
@@ -42,110 +43,106 @@ using namespace std;
 // here for convenience
 
 // The function below applies the appropriate transform to a 4-vector
-void matransform(stack<mat4> &transfstack, GLfloat* values) 
-{
-    mat4 transform = transfstack.top(); 
-    vec4 valvec = vec4(values[0],values[1],values[2],values[3]); 
-    vec4 newval = transform * valvec; 
-    for (int i = 0; i < 4; i++) values[i] = newval[i]; 
+void matransform(stack<mat4> &transfstack, GLfloat *values) {
+    mat4 transform = transfstack.top();
+    vec4 valvec = vec4(values[0], values[1], values[2], values[3]);
+    vec4 newval = transform * valvec;
+    for (int i = 0; i < 4; i++) values[i] = newval[i];
 }
 
-void rightmultiply(const mat4 & M, stack<mat4> &transfstack) 
-{
-    mat4 &T = transfstack.top(); 
-    T = T * M; 
+void rightmultiply(const mat4 &M, stack<mat4> &transfstack) {
+    mat4 &T = transfstack.top();
+    T = T * M;
 }
 
 // Function to read the input data values
 // Use is optional, but should be very helpful in parsing.  
-bool readvals(stringstream &s, const int numvals, float* values, const string smd)
-{
+bool readvals(stringstream &s, const int numvals, float *values) {
     for (int i = 0; i < numvals; i++) {
-        s >> values[i]; 
-        if (s.fail()) {
-            cout << "Failed reading value "+smd << i << " will skip\n";
-            return false;
-        }else{
-
-            cout << " reading value " << values[i] << " good\n";
-        }
-
-    }
-    return true; 
-}
-
-bool readvals(stringstream& s,  vec3 &values)
-{
-    for (int i = 0; i < 3; i++) {
         s >> values[i];
         if (s.fail()) {
-            cout << "Failed reading value " << i << " will skip\n";
             return false;
         }
     }
     return true;
 }
 
-bool readLightValues(string cmd, stringstream& s){
-    GLfloat values[10]; // Position and color for light, colors for others
+bool readvals(stringstream &s, vec3 &values) {
+    for (int i = 0; i < 3; i++) {
+        s >> values[i];
+        if (s.fail()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool checkAndReadLightValues(string cmd, stringstream &s) {
+    GLfloat values[6]; // Position and color for light, colors for others
     // Up to 10 params for cameras.
 
     bool read = false;
 
     // Process the light, add it to database.
     // Lighting Command
-    if (cmd == "point" ||cmd == "directional") {
+    if (cmd == "point" || cmd == "directional") {
         if (numlights == maxlights) { // No more Lights
             cerr << "Reached Maximum Number of Lights " << numlights << " Will ignore further lights\n";
         } else {
-            read = readvals(s, 6, values,cmd); // Position/color for lts.
+            read = readvals(s, 6, values); // Position/color for lts.
             if (read) {
                 lights[numlights].position = vec4(values[0], values[1], values[2], (cmd == "point") ? 1 : 0);
-                lights[numlights].color = vec4(values[3], values[4], values[5],0);
-                lights[numlights].type =  (cmd == "point") ? point : directional;
+                lights[numlights].color = vec4(values[3], values[4], values[5], 0);
+                lights[numlights].type = (cmd == "point") ? point : directional;
                 ++numlights;
             }
         }
-    }
+    }//else cerr << "Unable to read Command: " << cmd << " Skipping \n";
 
 
     return read;
 }
 
-bool readLightColorProperties(string cmd, stringstream& s){
+bool checkAndReadLightColorProperties(string cmd, stringstream &s) {
     bool read = false;
     GLfloat values[3];
-    vec4 * prop;
+    vec4 *prop;
     if (cmd == "shininess") {
-        read = readvals(s, 1, values,cmd);
-        if (read) {
+        if (readvals(s, 1, values)) {
             shininess = values[0];
         }
+        read = true;
         return read;
     }
     if (cmd == "ambient") {
         prop = &ambient;
+        read = true;
     } else if (cmd == "diffuse") {
         prop = &diffuse;
+        read = true;
     } else if (cmd == "specular") {
         prop = &specular;
+        read = true;
     } else if (cmd == "emission") {
         prop = &emission;
+        read = true;
     }
-    read = readvals(s, 3, values,cmd); // colors
     if (read) {
-        for (int i = 0; i < 3; i++) {
-            (*prop)[i] = values[i];
+
+        if (readvals(s, 3, values)) {
+            for (int i = 0; i < 3; i++) {
+                (*prop)[i] = values[i];
+            }
         }
     }
     return read;
 }
 
-bool readCameraValues(string cmd, stringstream& s){
+bool checkReadCameraValues(string cmd, stringstream &s) {
     bool read = false;
     if (cmd == "camera") {
         GLfloat values[10];
-        if ((read = readvals(s,10,values,cmd))) {
+        if ((readvals(s, 10, values))) {
 
             // YOUR CODE FOR HW 2 HERE
             // Use all values[0...9]
@@ -163,17 +160,18 @@ bool readCameraValues(string cmd, stringstream& s){
             upinit[1] = values[7];
             upinit[2] = values[8];
 
-        }
+        } else cerr << "Unable to read Command: " << cmd << " Skipping \n";
+        read = true;
     }
     return read;
 }
 
-bool readSphereValues(string cmd, stringstream& s,stack <mat4>& ts){
+bool checkAndReadSphereValues(string cmd, stringstream &s, stack<mat4> &ts) {
     bool read;
     if (cmd == "sphere") {
         GLfloat values[4];
-        if ((read = readvals(s, 4, values,cmd))) {
-            Sphere* sphere = new Sphere();
+        if ((readvals(s, 4, values))) {
+            Sphere *sphere = new Sphere();
             sphere->radius = values[3];
             sphere->center = vec3(values[0], values[1], values[2]);
             sphere->ambient = ambient;
@@ -184,16 +182,17 @@ bool readSphereValues(string cmd, stringstream& s,stack <mat4>& ts){
             sphere->transform = ts.top();
             Shape *sh = sphere;
             shapes.push_back(std::unique_ptr<Shape>(sh));
-        }
+        } else cerr << "Unable to read Command: " << cmd << " Skipping \n";
+        read = true;
     }
     return read;
 }
 
-bool readTriangleValues(string cmd, stringstream& s, stack <mat4>& ts){
+bool checkAndReadTriangleValues(string cmd, stringstream &s, stack<mat4> &ts) {
     bool read = false;
-    if (cmd == "tri" ) {
+    if (cmd == "tri") {
         GLfloat values[3];
-        if ((read = readvals(s, 3, values,cmd))) {
+        if ((readvals(s, 3, values))) {
             Triangle tri;
             tri.vertex1 = vertices[values[0]];
             tri.vertex2 = vertices[values[1]];
@@ -207,47 +206,52 @@ bool readTriangleValues(string cmd, stringstream& s, stack <mat4>& ts){
             // Set the object's transform
             tri.transform = ts.top();
             shapes.push_back(std::make_unique<Triangle>(tri));
-        }
+        } else cerr << "Unable to read Command: " << cmd << " Skipping \n";
+        read = true;
     }
     return read;
 }
 
-bool readTransforms(string cmd, stringstream& s, stack <mat4>& ts){
-    bool read = false;
-    GLfloat values[4];
+bool checkAndReadTransforms(string cmd, stringstream &s, stack<mat4> &ts) {
+
     if (cmd == "rotate") {
-        if ((read = readvals(s,4,values,cmd))) {
+        GLfloat values[4];
+        if ((readvals(s, 4, values))) {
             mat3 rm = Transform::rotate(values[3], vec3(values[0], values[1], values[2]));
-            mat4  rm4(1.0);
-            rm4[0] = vec4(rm[0],0);
-            rm4[1] = vec4(rm[1],0);
-            rm4[2] = vec4(rm[2],0);
-            rm4[3] = vec4(0,0,0,1);
+            mat4 rm4(1.0);
+            rm4[0] = vec4(rm[0], 0);
+            rm4[1] = vec4(rm[1], 0);
+            rm4[2] = vec4(rm[2], 0);
+            rm4[3] = vec4(0, 0, 0, 1);
             rightmultiply(rm4, ts);
-        }
-    }
-    else if (cmd == "translate") {
-        if ((readvals(s,3,values,cmd))) {
-            mat4 tm = Transform::translate((float)values[0], (float)values[1], (float)values[2]);
+        } else cerr << "Unable to read Command: " << cmd << " Skipping \n";
+        return true;
+    } else if (cmd == "translate") {
+        GLfloat values[3];
+        if ((readvals(s, 3, values))) {
+            mat4 tm = Transform::translate((float) values[0], (float) values[1], (float) values[2]);
             rightmultiply(tm, ts);
-        }
-    }
-    else if (cmd == "scale") {
-        if ((readvals(s,3,values,cmd))) {
+        } else cerr << "Unable to read Command: " << cmd << " Skipping \n";
+        return true;
+    } else if (cmd == "scale") {
+        GLfloat values[3];
+        if ((readvals(s, 3, values))) {
             mat4 sm = Transform::scale(values[0], values[1], values[2]);
-            rightmultiply(sm,ts);
+            rightmultiply(sm, ts);
 
-        }
+        } else cerr << "Unable to read Command: " << cmd << " Skipping \n";
+        return true;
     }
-    return read;
+    return false;
 }
 
-void initVals(){
+void initVals() {
     // Set up initial position for eye, up and amount
     // As well as booleans
     eye = eyeinit;
     up = upinit;
     amount = 5;
+    maxdepth = 10;
     modelview = Transform::lookAt(eye, center, up);
     sx = sy = 1.0;  // keyboard controlled scales in x and y
     tx = ty = 0.0;  // keyboard controllled translation in x and y
@@ -255,82 +259,89 @@ void initVals(){
 }
 
 
-
-void readfile(const char* filename) 
-{
-    string str, cmd; 
+void readfile(const char *filename) {
+    string str, cmd;
     ifstream in;
-    in.open(filename); 
+    in.open(filename);
     if (in.is_open()) {
 
         // I need to implement a matrix stack to store transforms.  
         // This is done using standard STL Templates 
-        stack <mat4> transfstack; 
+        stack<mat4> transfstack;
         transfstack.push(mat4(1.0));  // identity
 
-        getline (in, str); 
+
         while (in) {
+            getline(in, str);
             if ((str.find_first_not_of(" \t\r\n") != string::npos) && (str[0] != '#')) {
-                // Ruled out comment and blank lines 
-
+                // Ruled out comment and blank lines
                 stringstream s(str);
-                s >> cmd; 
-                int i; 
-                GLfloat values[10]; // Position and color for light, colors for others
-                                    // Up to 10 params for cameras.  
+                s >> cmd;
+                int i;
+                // Position and color for light, colors for others
+                // Up to 10 params for cameras.
 
-                bool validinput;
-                if(readLightValues(cmd,s))
+                if (checkAndReadLightValues(cmd, s))
                     continue;
-                if( readLightColorProperties(cmd,s))
+                if (checkAndReadLightColorProperties(cmd, s))
                     continue;
 
                 if (cmd == "size") {
-                    validinput = readvals(s,2,values,cmd);
-                    if (validinput) {
-                        w =  values[0]; h = values[1]; 
+                    GLfloat values[2];
+                    if (readvals(s, 2, values)) {
+                        w = values[0];
+                        h = values[1];
+                    } else cerr << "Unable to read Command: " << cmd << " Skipping \n\n";
+                    continue;
+                }
+                if (cmd == "output") {
+                    string entry = s.str();
+                    string::size_type index = entry.find(' ');
+                    if (index != std::string::npos) {
+                        outputfile = entry.substr(index + 1, entry.size() - index);
                     }
                     continue;
                 }
-                if(readCameraValues(cmd,s))
+                if (checkReadCameraValues(cmd, s))
                     continue;
 
-                if(readTriangleValues(cmd,s, transfstack))
+                if (checkAndReadTriangleValues(cmd, s, transfstack))
                     continue;
                 if (cmd == "vertex") {
-                    validinput = readvals(s, 3, values,cmd);
-                   // Sphere sphere;
-                    if (validinput) {
-                       vertices.push_back(vec3(values[0], values[1], values[2]));
-                    }
+                    // Sphere sphere;
+                    GLfloat values[3];
+                    if (readvals(s, 3, values)) {
+                        vertices.push_back(vec3(values[0], values[1], values[2]));
+                    } else cerr << "Unable to read Command: " << cmd << " Skipping \n";
+                    continue;
                 }
 
-                if(readSphereValues(cmd,s, transfstack))
+                if (checkAndReadSphereValues(cmd, s, transfstack))
                     continue;
 
-                if(readTransforms(cmd,s, transfstack))
+                if (checkAndReadTransforms(cmd, s, transfstack))
                     continue;
 
                 // I include the basic push/pop code for matrix stacks
                 if (cmd == "pushTransform") {
-                    transfstack.push(transfstack.top()); 
+                    transfstack.push(transfstack.top());
+
                 } else if (cmd == "popTransform") {
                     if (transfstack.size() <= 1) {
-                        cerr << "Stack has no elements.  Cannot Pop\n"; 
+                        cerr << "Stack has no elements.  Cannot Pop\n";
                     } else {
                         transfstack.pop();
                     }
-                }
-                else {
-                    cerr << "Unknown Command: " << cmd << " Skipping \n"; 
+                } else {
+                    cerr << "Unknown Command: " << cmd << " Skipping \n";
                 }
             }
-            getline (in, str); 
+
         }
 
         initVals();
     } else {
-        cerr << "Unable to Open Input Data File " << filename << "\n"; 
-        throw 2; 
+        cerr << "Unable to Open Input Data File " << filename << "\n";
+        throw 2;
     }
 }
