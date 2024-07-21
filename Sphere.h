@@ -40,18 +40,12 @@ public:
         *
         */
         float discr = b * b - (4 * a * c);
-        if (!printed) {
-             //cerr << "using eye at a ==> " << a << " b: " << b << " and c: " << c << " and originTx: " << originT[0] << ", originx " << origin[0] << "  originTy: " << originT[1] << " ,originX "<< origin[1] << " and originTz: " << originT[2] << "\n";
-        //   cerr << "using eye at a ==> " << a << " b: " << b << " and c: " << c << " and translatedx: " << transform[0][3] << "  translatey: " << transform[1][3] << " and translatez: " << transform[2][3] << "\n";
-             printed = true;
-        }
-      //  ++printed;
         if (discr < 0) return false;
-        else if (discr == 0) tIn = tOut = -0.5 * b / a;
+        else if (discr == 0) tIn = tOut = -0.5f * b / a;
         else {
             float q = (b > 0) ?
-                -0.5 * (b + sqrt(discr)) :
-                -0.5 * (b - sqrt(discr));
+                -0.5f * (b + sqrt(discr)) :
+                -0.5f * (b - sqrt(discr));
             tIn = q / a;
             tOut = c / q;
         }
@@ -76,26 +70,15 @@ public:
 
 
     vec3 getNormal(vec4 Ph) {
-       // mat4 ttt = ((transform));
-      //  mat4 t1 = glm::inverse((ttt));
         vec3 pht = vec3(Ph);
         vec3 normal = pht - center;
-
       return  glm::normalize( normal );
-     // return  center;
-     
+
     }
 
     vec3 getTransformedNormal(vec3 Ph, mat4 modelview) {
-
-     //   vec3 normal = vec3( Ph) - center;
-        //  cerr << " center x " << center[0] << " , center y " << center[1] << " , center z , " << center[2] << "\n";
-      //  cerr << " diffuse x " << diffuse[0] << " , diffuse y " << diffuse[1] << " , diffuse , " << diffuse[2] << "\n";
-
         vec3 normal = Ph - center;
-        //return glm::normalize(normal);
-       return glm::normalize(mat3(inverse (transpose(transform)))  * normal);
-        // Ph - vec4(center, 1);
+       return glm::normalize(vec3(inverse (transpose(transform))  * vec4 (normal,0.0f)));
     }
 
   

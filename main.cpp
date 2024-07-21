@@ -16,7 +16,7 @@
 
 using namespace std ;
 
-void render(BYTE* pixels) ;  // prototype for display function.
+vec3* render() ;  // prototype for display function.
 
 
 string getPathAndFile( string str, string &fileName, string &path) {
@@ -60,7 +60,24 @@ void rayTrace(string file) {
     std::cout << "File read,about to start rendering scene\n\n";
     int size = w * h * 3;
     BYTE* pixels = new BYTE[size];
-    render(pixels);
+    vec3* traceColors =  render();
+    double a = 0, d = 0, c = 0;
+    size_t e = 0;
+    for(int i=0; i<w*h;i++){
+        a = traceColors[i][2] * 255;
+        a = (a > 255 ? 255 : a);
+        pixels[e] = (unsigned char) (a);
+        e++;
+        d = traceColors[i][1] * 255;
+        d = (d > 255 ? 255 : d);
+        pixels[e] = (unsigned char) (d);
+        e++;
+        c = traceColors[i][0] * 255;
+        c = (c > 255 ? 255 : c);
+        pixels[e] = (unsigned char) (c);
+        e++;
+
+    }
     std::cout << "scene rendered,about to write to image file\n\n";
     writePixelsToImageFile(pixels, path);
     FreeImage_DeInitialise();

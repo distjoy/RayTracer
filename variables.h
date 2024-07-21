@@ -66,6 +66,7 @@ EXTERN std::vector <std::unique_ptr<Shape>> shapes;
 // Materials (read from file) 
 // With multiple objects, these are colors for each.
 
+EXTERN vec3 attenuation ;
 EXTERN vec4 ambient ;
 EXTERN vec4 diffuse;
 EXTERN vec4 specular;

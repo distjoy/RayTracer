@@ -167,7 +167,7 @@ bool checkReadCameraValues(string cmd, stringstream &s) {
 }
 
 bool checkAndReadSphereValues(string cmd, stringstream &s, stack<mat4> &ts) {
-    bool read;
+    bool read = false;
     if (cmd == "sphere") {
         GLfloat values[4];
         if ((readvals(s, 4, values))) {
@@ -251,11 +251,17 @@ void initVals() {
     eye = eyeinit;
     up = upinit;
     amount = 5;
-    maxdepth = 10;
+    maxdepth = 5;
     modelview = Transform::lookAt(eye, center, up);
     sx = sy = 1.0;  // keyboard controlled scales in x and y
     tx = ty = 0.0;  // keyboard controllled translation in x and y
     glEnable(GL_DEPTH_TEST);
+    cerr << "rendering to pixel at about 50% done... " << attenuation[0] << "\n";
+    if(attenuation[0]==0){
+        attenuation[0]=1;
+        attenuation[1] =0;
+        attenuation[2]=0;
+    }
 }
 
 
@@ -263,12 +269,13 @@ void readfile(const char *filename) {
     string str, cmd;
     ifstream in;
     in.open(filename);
+    numlights = 0;
     if (in.is_open()) {
 
-        // I need to implement a matrix stack to store transforms.  
-        // This is done using standard STL Templates 
+        // I need to implement a matrix stack to store transforms.
+        // This is done using standard STL Templates
         stack<mat4> transfstack;
-        transfstack.push(mat4(1.0));  // identity
+        transfstack.emplace(1.0);  // identity
 
 
         while (in) {
@@ -291,6 +298,15 @@ void readfile(const char *filename) {
                     if (readvals(s, 2, values)) {
                         w = values[0];
                         h = values[1];
+                    } else cerr << "Unable to read Command: " << cmd << " Skipping \n\n";
+                    continue;
+                }
+                if (cmd == "attenuation") {
+                    GLfloat values[3];
+                    if (readvals(s, 3, values)) {
+                        attenuation[0] = values[0];
+                        attenuation[1] = values[1];
+                        attenuation[2] = values[2];
                     } else cerr << "Unable to read Command: " << cmd << " Skipping \n\n";
                     continue;
                 }
@@ -320,7 +336,7 @@ void readfile(const char *filename) {
                     continue;
 
                 if (checkAndReadTransforms(cmd, s, transfstack))
-                    continue;
+                     continue;
 
                 // I include the basic push/pop code for matrix stacks
                 if (cmd == "pushTransform") {
