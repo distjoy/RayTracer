@@ -111,7 +111,7 @@ C:/Users/Distjoy/CLionProjects/RayTracer/lib/FreeImage.dll
 C:/Users/Distjoy/CLionProjects/RayTracer/lib/freeglut.dll
 ```
 
-That means a recruiter or reviewer may need to adjust the library paths before building on a different machine. The repository already includes headers and several Windows library/DLL files under `include/`, `lib/`, and `glut/`.
+That means the library paths may need to be adjusted before building on a different machine. The repository already includes headers and several Windows library/DLL files under `include/`, `lib/`, and `glut/`.
 
 Expected dependencies:
 
@@ -155,7 +155,7 @@ scenes/scene6.test
 scenes/scene7.test
 ```
 
-## Notes for Reviewers
+## Code Guide
 
 This project is a compact educational renderer with most of the interesting rendering logic written directly in C++. The strongest areas to inspect are:
 
